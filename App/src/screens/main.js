@@ -1,9 +1,18 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, StyleSheet } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { connect } from 'react-redux';
+import { fetchWeather } from '../services/weather';
 
 const Main = () => {
+
+  useEffect(() => {
+    fetchWeather(70, 29)
+    .then((data) => {
+      console.log(data);
+    });
+  });
+
   return (
     <View style={styles.container}>
       <LottieView
