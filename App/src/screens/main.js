@@ -1,15 +1,23 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect } from 'react';
-import { View, StyleSheet, Pressable, FlatList, Text, LayoutAnimation, Platform, UIManager, Alert } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Pressable,
+  FlatList,
+  Text,
+  Alert,
+  Animated,
+} from 'react-native';
 import LottieView from 'lottie-react-native';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
+import Geolocation from '@react-native-community/geolocation';
 import {
   fetchWeatherAction,
   clearApiState,
 } from './../actions';
 
-import Geolocation from '@react-native-community/geolocation';
 import en from '../config/en';
 
 const WEEK_DAYS = [
@@ -22,11 +30,11 @@ const WEEK_DAYS = [
   'saturday',
 ];
 
-if (Platform.OS === 'android') {
-  if (UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-  }
+const arr = [];
+for (var i = 0; i < 6; i++) {
+  arr.push(i);
 }
+
 const Main = (props) => {
   const {
     apiState,
@@ -35,13 +43,35 @@ const Main = (props) => {
     loading,
     city,
   } = props.main;
+
+  const animatedValue = [];
+  arr.forEach((value) => {
+    animatedValue[value] = new Animated.Value(0);
+  });
+
   useEffect(() => {
     fetchWeather();
   }, []);
 
   useEffect(() => {
-    LayoutAnimation.easeInEaseOut();
+    if (!loading) {
+      animate();
+    }
   }, [loading]);
+
+  const animate = () => {
+    const animations = arr.map((item) => {
+      return Animated.timing(
+        animatedValue[item],
+        {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }
+      );
+    });
+    Animated.stagger(10, animations).start();
+  };
 
   const fetchWeather = () => {
     Geolocation.getCurrentPosition(({ coords }) => {
@@ -80,19 +110,19 @@ const Main = (props) => {
   const renderListItem = ({ item, index }) => {
     const d = new Date();
     return (
-      <View style={styles.listItem}>
-        <Text style={styles.listItemText}>{en[WEEK_DAYS[(d.getDay() + index + 1) % 7]]}</Text>
-        <Text style={styles.listItemText}>{item}</Text>
-      </View>
+      <Animated.View style={[styles.listItem, { opacity: animatedValue[index + 1] }]}>
+        <Animated.Text style={styles.listItemText}>{en[WEEK_DAYS[(d.getDay() + index + 1) % 7]]}</Animated.Text>
+        <Animated.Text style={styles.listItemText}>{item}</Animated.Text>
+      </Animated.View>
     );
   };
   if (apiState.isSuccess) {
     return (
       <View style={styles.flex}>
-        <View style={[styles.container]}>
+        <Animated.View style={[styles.container, { opacity: animatedValue[0] }]}>
           <Text style={styles.currentTemp}>{currentTemp + ''}</Text>
           <Text style={styles.city}>{city + ''}</Text>
-        </View>
+        </Animated.View>
         <View style={styles.flex}>
           <FlatList
             bounces={false}

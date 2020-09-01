@@ -32,7 +32,7 @@ function MainReducer(state = INITIAL_STATE, action) {
         },
         currentTemp: action.payload.current && action.payload.current.main.temp,
         city: action.payload.current && action.payload.current.name,
-        fiveDays: action.payload.forecast.daily && action.payload.forecast.daily.map(temp => temp.temp.day).slice(0, 5),
+        fiveDays: action.payload.forecast.daily && action.payload.forecast.daily.map(temp => temp.temp.day).slice(1, 6),
         loading: false,
       };
     case FETCH_WEATHER_ERROR:
