@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect } from 'react';
-import { View, StyleSheet, Pressable, FlatList, Text } from 'react-native';
+import { View, StyleSheet, Pressable, FlatList, Text, LayoutAnimation, Platform, UIManager, Alert } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
@@ -22,18 +22,12 @@ const WEEK_DAYS = [
   'saturday',
 ];
 
+if (Platform.OS === 'android') {
+  if (UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  }
+}
 const Main = (props) => {
-
-  useEffect(() => {
-    fetchWeather();
-  }, []);
-
-  const fetchWeather = () => {
-    Geolocation.getCurrentPosition(({ coords }) => {
-      props.actions.fetchWeatherAction(coords.latitude, coords.longitude);
-    });
-  };
-
   const {
     apiState,
     currentTemp,
@@ -41,6 +35,21 @@ const Main = (props) => {
     loading,
     city,
   } = props.main;
+  useEffect(() => {
+    fetchWeather();
+  }, []);
+
+  useEffect(() => {
+    LayoutAnimation.easeInEaseOut();
+  }, [loading]);
+
+  const fetchWeather = () => {
+    Geolocation.getCurrentPosition(({ coords }) => {
+      props.actions.fetchWeatherAction(coords.latitude, coords.longitude);
+    }, (error) => {
+      Alert.alert('', error.message);
+    });
+  };
 
   if (loading) {
     return (
@@ -57,7 +66,7 @@ const Main = (props) => {
     );
   }
 
-  if (apiState.isError) {
+  if (apiState.isError || (apiState.isSuccess && !currentTemp)) {
     return (
       <View style={styles.container}>
         <Text style={styles.error}>{en.error}</Text>
@@ -77,23 +86,25 @@ const Main = (props) => {
       </View>
     );
   };
-
-  return (
-    <View style={styles.flex}>
-      <View style={[styles.container]}>
-        <Text style={styles.currentTemp}>{currentTemp + ''}</Text>
-        <Text style={styles.city}>{city + ''}</Text>
-      </View>
+  if (apiState.isSuccess) {
+    return (
       <View style={styles.flex}>
-        <FlatList
-          bounces={false}
-          keyExtractor={item => '' + item}
-          data={fiveDays}
-          renderItem={renderListItem}
-        />
+        <View style={[styles.container]}>
+          <Text style={styles.currentTemp}>{currentTemp + ''}</Text>
+          <Text style={styles.city}>{city + ''}</Text>
+        </View>
+        <View style={styles.flex}>
+          <FlatList
+            bounces={false}
+            keyExtractor={item => '' + item}
+            data={fiveDays}
+            renderItem={renderListItem}
+          />
+        </View>
       </View>
-    </View>
-  );
+    );
+  }
+  return null;
 };
 
 const styles = StyleSheet.create({
