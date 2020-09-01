@@ -100,7 +100,7 @@ const Main = (props) => {
     return (
       <View style={styles.container}>
         <Text style={styles.error}>{en.error}</Text>
-        <Pressable onPress={fetchWeather} style={[styles.button, ({ pressed }) => pressed ? styles.pressed : null]}>
+        <Pressable onPress={fetchWeather} style={({ pressed }) => [styles.button, pressed ? styles.pressed : null]}>
           <Text>{en.retry}</Text>
         </Pressable>
       </View>
