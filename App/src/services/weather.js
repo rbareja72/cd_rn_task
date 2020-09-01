@@ -7,7 +7,20 @@ const api = create({
   baseURL: BASE_URL,
 });
 
-export const fetchWeather = (lat, lon) => {
+export const fetchCurrentWeather = (lat, lon) => {
+  return api.get(
+    '/weather',
+    {
+      appid: WEATHER_API_KEY,
+      lat,
+      lon,
+      units: 'metric',
+    }
+  ).then(response => Promise.resolve(response.data))
+    .catch(error => Promise.reject(error));
+};
+
+export const fetchForecast = (lat, lon) => {
   return api.get(
     '/onecall',
     {

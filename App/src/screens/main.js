@@ -1,36 +1,105 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Pressable, FlatList, Text } from 'react-native';
 import LottieView from 'lottie-react-native';
+import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
-import { fetchWeather } from '../services/weather';
-import Geolocation from '@react-native-community/geolocation';
+import {
+  fetchWeatherAction,
+  clearApiState,
+} from './../actions';
 
-const Main = () => {
+import Geolocation from '@react-native-community/geolocation';
+import en from '../config/en';
+
+const WEEK_DAYS = [
+  'sunday',
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+];
+
+const Main = (props) => {
 
   useEffect(() => {
+    fetchWeather();
+  }, []);
+
+  const fetchWeather = () => {
     Geolocation.getCurrentPosition(({ coords }) => {
-      fetchWeather(coords.latitude, coords.longitude)
-        .then((data) => {
-           console.log(data);
-        });
+      props.actions.fetchWeatherAction(coords.latitude, coords.longitude);
     });
-  });
+  };
+
+  const {
+    apiState,
+    currentTemp,
+    fiveDays,
+    loading,
+    city,
+  } = props.main;
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <LottieView
+          source={require('../../assets/splashy-loader.json')}
+          style={styles.loader}
+          autoPlay
+          loop={true}
+          resizeMode="contain"
+          onAnimationFinish={() => { }}
+        />
+      </View>
+    );
+  }
+
+  if (apiState.isError) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.error}>{en.error}</Text>
+        <Pressable onPress={fetchWeather} style={[styles.button, ({ pressed }) => pressed ? styles.pressed : null]}>
+          <Text>{en.retry}</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  const renderListItem = ({ item, index }) => {
+    const d = new Date();
+    return (
+      <View style={styles.listItem}>
+        <Text style={styles.listItemText}>{en[WEEK_DAYS[(d.getDay() + index + 1) % 7]]}</Text>
+        <Text style={styles.listItemText}>{item}</Text>
+      </View>
+    );
+  };
 
   return (
-    <View style={styles.container}>
-      <LottieView
-        source={require('../../assets/splashy-loader.json')}
-        style={styles.loader}
-        autoPlay
-        loop={true}
-        resizeMode="contain"
-        onAnimationFinish={() => { }}
-      />
+    <View style={styles.flex}>
+      <View style={[styles.container]}>
+        <Text style={styles.currentTemp}>{currentTemp + ''}</Text>
+        <Text style={styles.city}>{city + ''}</Text>
+      </View>
+      <View style={styles.flex}>
+        <FlatList
+          bounces={false}
+          keyExtractor={item => '' + item}
+          data={fiveDays}
+          renderItem={renderListItem}
+        />
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  flex: {
+    flex: 1,
+  },
   loader: {
     width: 100,
     height: 100,
@@ -40,10 +109,43 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  pressed: {
+    opacity: 0.2,
+  },
+  error: {
+    color: '#333',
+    fontSize: 60,
+  },
+  button: {
+    borderWidth: 1,
+    borderColor: '#000',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    marginTop: 100,
+  },
+  currentTemp: {
+    fontSize: 100,
+  },
+  city: {
+    fontSize: 20,
+  },
+  listItem: {
+    borderTopColor: '#000',
+    borderTopWidth: 1,
+    paddingVertical: 16,
+    justifyContent: 'space-around',
+    flexDirection: 'row',
+  },
+  listItemText: {
+    fontSize: 20,
+  },
 });
 
 const mapStateToProps = ({ MainReducer }) => ({
   main: MainReducer,
 });
 
-export default connect(mapStateToProps)(Main);
+const mapDispatchToProps = (dispatch) => ({
+  actions: bindActionCreators({ fetchWeatherAction, clearApiState }, dispatch),
+});
+export default connect(mapStateToProps, mapDispatchToProps)(Main);
