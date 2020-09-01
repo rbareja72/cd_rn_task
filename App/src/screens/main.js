@@ -3,13 +3,16 @@ import { View, StyleSheet } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { connect } from 'react-redux';
 import { fetchWeather } from '../services/weather';
+import Geolocation from '@react-native-community/geolocation';
 
 const Main = () => {
 
   useEffect(() => {
-    fetchWeather(70, 29)
-    .then((data) => {
-      console.log(data);
+    Geolocation.getCurrentPosition(({ coords }) => {
+      fetchWeather(coords.latitude, coords.longitude)
+        .then((data) => {
+           console.log(data);
+        });
     });
   });
 
