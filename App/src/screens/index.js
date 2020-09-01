@@ -9,25 +9,28 @@
 import React from 'react';
 import {
   SafeAreaView,
-  Text,
   StatusBar,
+  StyleSheet,
 } from 'react-native';
-import { connect } from 'react-redux'
+import Main from './main';
 
+const styles = StyleSheet.create({
+  flex: {
+    flex: 1,
+  },
+});
 
 const Root = (props) => {
   return (
     <>
       <StatusBar barStyle="dark-content" />
-      <SafeAreaView>
-        <Text>{props.main.loading}</Text>
+      <SafeAreaView style={styles.flex}>
+        <Main />
       </SafeAreaView>
     </>
   );
 };
 
-const mapStateToProps = ({ MainReducer }) => ({
-  main: MainReducer,
-});
 
-export default connect(mapStateToProps)(Root);
+
+export default Root;
